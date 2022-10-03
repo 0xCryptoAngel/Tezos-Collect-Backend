@@ -9,9 +9,7 @@ import {
 } from '@nestjs/common';
 
 import { UpdatePresaleInfoDto } from './dto/update-presaleInfo.dto';
-import { PresaleInfoService } from './presale.service';
-
-import { UpdatePartnerDto } from './dto/update-partner.dto';
+import { PresaleInfoService } from './marketplace.service';
 
 @Controller('presales')
 export class PresaleController {

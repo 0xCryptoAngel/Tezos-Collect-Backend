@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PresaleModule } from './presale/presale.module';
+import { PresaleModule } from './marketplace/marketplace.module';
 import { TEZOS_COLLECT_NETWORK } from './helpers/constants';
 require('dotenv').config();
 
