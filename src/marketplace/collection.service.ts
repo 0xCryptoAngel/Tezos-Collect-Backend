@@ -16,6 +16,9 @@ export class CollectionService {
     // all.forEach((item) => item.save());
     return all;
   }
+  async findOneBySlug(slug: string): Promise<CollectionDocument> {
+    return await this.collectionModel.findOne({ slug }).exec();
+  }
 
   async updateOneBySlug(
     slug: string,

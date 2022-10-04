@@ -8,7 +8,6 @@ import {
   Put,
 } from '@nestjs/common';
 
-import { UpdatePresaleInfoDto } from './dto/update-presaleInfo.dto';
 import { PresaleInfoService } from './marketplace.service';
 
 @Controller('presales')
@@ -27,14 +26,6 @@ export class PresaleController {
   @Get(':address')
   async find(@Param('address') address: string) {
     return await this.service.findOne(address);
-  }
-
-  @Put(':address')
-  async udpate(
-    @Param('address') address: string,
-    @Body() updatePresaleInfoDto: UpdatePresaleInfoDto,
-  ) {
-    return await this.service.update(address, updatePresaleInfoDto);
   }
 
   @Delete(':address')

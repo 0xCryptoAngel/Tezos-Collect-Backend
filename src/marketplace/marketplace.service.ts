@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UpdatePresaleInfoDto } from './dto/update-presaleInfo.dto';
+
 import { PresaleInfo, PresaleInfoDocument } from './schema/presaleInfo.schema';
 
 @Injectable()
@@ -42,22 +42,6 @@ export class PresaleInfoService {
     else presale.likes.push(wallet);
     await presale.save();
     return presale;
-  }
-  async update(
-    address: string,
-    updatePresaleInfoDto: UpdatePresaleInfoDto,
-  ): Promise<PresaleInfo> {
-    updatePresaleInfoDto.address = address;
-    return await this.model
-      .findOneAndUpdate(
-        { address: { $regex: `${address}`, $options: 'i' } },
-        { ...updatePresaleInfoDto, createdAt: new Date() },
-        {
-          returnDocument: 'after',
-          upsert: true,
-        },
-      )
-      .exec();
   }
 
   async delete(address: string): Promise<PresaleInfo> {
