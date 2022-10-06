@@ -16,7 +16,10 @@ export class DomainService {
     const all = await this.domainModel.find().exec();
 
     all.forEach((item) => {
-      const isForAuction = Math.random() > 0.5;
+      item.lastSoldAt = new Date(
+        new Date().getTime() - Math.random() * 87600 * 30 * 1000,
+      );
+      /*const isForAuction = Math.random() > 0.5;
       item.isForAuction = isForAuction;
       if (isForAuction) {
         item.topBid = Math.random() * 150;
@@ -28,7 +31,7 @@ export class DomainService {
         );
         const isFeatured = Math.random() > 0.9;
         item.isFeatured = isFeatured;
-      }
+      }*/
       item.save();
     });
     return all;
@@ -102,6 +105,10 @@ export class DomainService {
     return result;
   }
   async getDomainsByName(name: string): Promise<Domain> {
-    return await this.domainModel.findOne({ name }).exec();
+    let _domain = await this.domainModel.findOne({ name }).exec();
+    if (_domain === null) {
+      _domain = new this.domainModel({ name });
+    }
+    return _domain;
   }
 }

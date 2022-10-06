@@ -14,6 +14,7 @@ export class BaseDomainDto {
   topBidder: string;
   tokenId: number;
   collectionId: string;
+  includingOperator: boolean;
 }
 
 export class UpdateDomainDto extends BaseDomainDto {

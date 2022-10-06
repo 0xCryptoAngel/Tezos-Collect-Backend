@@ -14,16 +14,16 @@ export class Domain {
   owner: string;
   @Prop({ default: [] })
   tags: string[];
-  @Prop({ default: 0 })
+  @Prop({ default: new Date(0) })
   lastSoldAt: Date;
   @Prop({ default: 0 })
   lastSoldAmount: number;
 
   @Prop({ default: false })
   isRegisterd: boolean;
-  @Prop({})
+  @Prop({ default: new Date(0) })
   registeredAt: Date;
-  @Prop({})
+  @Prop({ default: new Date(0) })
   expiresAt: Date;
 
   @Prop({ default: false })
@@ -31,9 +31,9 @@ export class Domain {
   @Prop({ default: 0 })
   price: number;
 
-  @Prop()
+  @Prop({ default: new Date(0) })
   saleStartedAt: Date;
-  @Prop()
+  @Prop({ default: new Date(0) })
   saleEndsAt: Date;
   @Prop({ default: 0 })
   topOffer: number;
@@ -42,9 +42,9 @@ export class Domain {
 
   @Prop({ default: false })
   isForAuction: boolean;
-  @Prop()
+  @Prop({ default: new Date(0) })
   auctionStartedAt: Date;
-  @Prop()
+  @Prop({ default: new Date(0) })
   auctionEndsAt: Date;
   @Prop({ default: 0 })
   topBid: number;
@@ -63,6 +63,8 @@ export class Domain {
 
   @Prop({ default: false })
   isFeatured: boolean;
+  @Prop({ default: false })
+  includingOperator: boolean;
 }
 
 export const DomainSchema = SchemaFactory.createForClass(Domain);
