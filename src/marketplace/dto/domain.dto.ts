@@ -2,7 +2,7 @@ export class BaseDomainDto {
   name: string;
   owner: string;
   tags: string[];
-  registeredAt: Date;
+  // registeredAt: Date;
   expiresAt: Date;
   saleStartedAt: Date;
   saleEndsAt: Date;

@@ -21,8 +21,8 @@ export class Domain {
 
   @Prop({ default: false })
   isRegisterd: boolean;
-  @Prop({ default: new Date(0) })
-  registeredAt: Date;
+  // @Prop({ default: new Date(0) })
+  // registeredAt: Date;
   @Prop({ default: new Date(0) })
   expiresAt: Date;
 
