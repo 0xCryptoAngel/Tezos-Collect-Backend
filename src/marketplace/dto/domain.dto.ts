@@ -6,8 +6,10 @@ export class BaseDomainDto {
   expiresAt: Date;
   saleStartedAt: Date;
   saleEndsAt: Date;
-  topOffer: number;
-  topOfferer: string;
+  lastSoldAt?: Date;
+  lastSoldAmount?: number;
+  topOffer?: number;
+  topOfferer?: string;
   auctionStartedAt: Date;
   auctionEndsAt: Date;
   topBid: number;

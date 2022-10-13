@@ -16,9 +16,9 @@ export class DomainService {
     const all = await this.domainModel.find().exec();
 
     all.forEach((item) => {
-      item.lastSoldAt = new Date(
-        new Date().getTime() - Math.random() * 87600 * 30 * 1000,
-      );
+      // item.lastSoldAt = new Date(
+      //   new Date().getTime() - Math.random() * 87600 * 30 * 1000,
+      // );
       /*const isForAuction = Math.random() > 0.5;
       item.isForAuction = isForAuction;
       if (isForAuction) {
@@ -31,8 +31,8 @@ export class DomainService {
         );
         const isFeatured = Math.random() > 0.9;
         item.isFeatured = isFeatured;
-      }*/
-      item.save();
+      }
+      item.save();*/
     });
     return all;
   }
@@ -46,6 +46,11 @@ export class DomainService {
     name: string,
     updateDomainDto: UpdateDomainDto,
   ): Promise<Domain> {
+    delete updateDomainDto.lastSoldAt;
+    delete updateDomainDto.lastSoldAmount;
+    delete updateDomainDto.topOffer;
+    delete updateDomainDto.topOfferer;
+
     return await this.domainModel
       .findOneAndUpdate(
         { name },
