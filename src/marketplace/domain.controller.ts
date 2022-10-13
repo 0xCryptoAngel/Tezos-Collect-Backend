@@ -63,7 +63,7 @@ export class DomainController {
   }
 
   @Get('/find/:name')
-  async getDomainsByName(@Param('name') name: string) {
-    return await this.service.getDomainsByName(name);
+  async getDomainByName(@Param('name') name: string) {
+    return await this.service.getDomainByName(name);
   }
 }

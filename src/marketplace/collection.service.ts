@@ -12,7 +12,13 @@ export class CollectionService {
   ) {}
 
   async findAll(): Promise<Collection[]> {
-    const all = await this.collectionModel.find().exec();
+    const all = await this.collectionModel
+      .find()
+      .select({
+        // _id: 0,
+        __v: 0,
+      })
+      .exec();
     // all.forEach((item) => item.save());
     return all;
   }

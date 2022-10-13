@@ -104,7 +104,7 @@ export class DomainService {
       .exec();
     return result;
   }
-  async getDomainsByName(name: string): Promise<Domain> {
+  async getDomainByName(name: string): Promise<DomainDocument> {
     let _domain = await this.domainModel.findOne({ name }).exec();
     if (_domain === null) {
       _domain = new this.domainModel({ name });
