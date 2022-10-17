@@ -20,7 +20,7 @@ export class Domain {
   lastSoldAmount: number;
 
   @Prop({ default: false })
-  isRegisterd: boolean;
+  isRegistered: boolean;
   // @Prop({ default: new Date(0) })
   // registeredAt: Date;
   @Prop({ default: new Date(0) })
@@ -65,6 +65,9 @@ export class Domain {
   isFeatured: boolean;
   @Prop({ default: false })
   includingOperator: boolean;
+
+  @Prop({ default: false })
+  isPalindromes: boolean;
 }
 
 export const DomainSchema = SchemaFactory.createForClass(Domain);

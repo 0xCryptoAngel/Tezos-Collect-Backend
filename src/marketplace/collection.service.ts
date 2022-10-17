@@ -26,6 +26,10 @@ export class CollectionService {
     return await this.collectionModel.findOne({ slug }).exec();
   }
 
+  async findOneById(id): Promise<CollectionDocument> {
+    return await this.collectionModel.findById(id).exec();
+  }
+
   async updateOneBySlug(
     slug: string,
     updateCollectionDto: UpdateCollectionDto,

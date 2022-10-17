@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { CollectionService } from './collection.service';
 import { DomainService } from './domain.service';
-import { UpdateDomainDto } from './dto/domain.dto';
+import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
 import { CollectionDocument } from './schema/collection.schema';
 
 @Controller('domains')
@@ -65,5 +65,15 @@ export class DomainController {
   @Get('/find/:name')
   async getDomainByName(@Param('name') name: string) {
     return await this.service.getDomainByName(name);
+  }
+  @Post('/query')
+  async queryDomain(@Body() queryDomainDto: QueryDomainDto) {
+    return await this.service.queryDomain(queryDomainDto);
+  }
+
+  @Get('/test-link')
+  async testLink() {
+    // 634b6b5273871fad49b322fd
+    return await this.service.testFunction();
   }
 }
