@@ -1,16 +1,9 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpException,
-  HttpStatus,
-  Param,
-  Post,
-  Put,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { DomainActivityService } from './domain_activity.service';
-import { CreateDomainActivityDto } from './dto/domain_activity.dto';
+import {
+  CreateDomainActivityDto,
+  QueryDomainActivityDto,
+} from './dto/domain_activity.dto';
 
 @Controller('domain-activity')
 export class DomainActivityController {
@@ -31,5 +24,12 @@ export class DomainActivityController {
     @Body() createDomainActivityDto: CreateDomainActivityDto,
   ) {
     return await this.service.createActivity(createDomainActivityDto);
+  }
+
+  @Post('query')
+  async queryDomainActivity(
+    @Body() queryDomainActivityDto: QueryDomainActivityDto,
+  ) {
+    return await this.service.queryDomainActivity(queryDomainActivityDto);
   }
 }

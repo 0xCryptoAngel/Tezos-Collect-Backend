@@ -1,4 +1,8 @@
-import { T_DOMAIN_ACTIVITY_TYPE } from 'src/helpers/interface';
+import {
+  I_DOMAIN_ACTIVITY_SEARCH_OPTION,
+  TYPE_ACTIVITY_SORT_VALUE,
+  T_DOMAIN_ACTIVITY_TYPE,
+} from 'src/helpers/interface';
 
 export class BaseDomainActivityDto {
   amount: number;
@@ -13,4 +17,9 @@ export class BaseDomainActivityDto {
 
 export class CreateDomainActivityDto extends BaseDomainActivityDto {
   signature: string;
+}
+
+export class QueryDomainActivityDto {
+  searchOptions: I_DOMAIN_ACTIVITY_SEARCH_OPTION;
+  sortOption: TYPE_ACTIVITY_SORT_VALUE;
 }

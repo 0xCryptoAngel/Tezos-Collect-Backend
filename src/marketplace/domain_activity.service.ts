@@ -1,11 +1,14 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { TEZOS_COLLECT_SECRET } from 'src/helpers/constants';
+import { DEFAULT_PAGE_SIZE, TEZOS_COLLECT_SECRET } from 'src/helpers/constants';
 import { decryptAnyWithAES } from 'src/helpers/text-crypt';
 import { CollectionService } from './collection.service';
 import { DomainService } from './domain.service';
-import { CreateDomainActivityDto } from './dto/domain_activity.dto';
+import {
+  CreateDomainActivityDto,
+  QueryDomainActivityDto,
+} from './dto/domain_activity.dto';
 import { DomainDocument } from './schema/domain.schema';
 
 import {
@@ -111,5 +114,54 @@ export class DomainActivityService {
       decryptAnyWithAES(signature, TEZOS_COLLECT_SECRET) ===
       JSON.stringify(createDomainActivityDto)
     );
+  }
+
+  async queryDomainActivity(
+    queryDomainActivityDto: QueryDomainActivityDto,
+  ): Promise<{ domainActivities: DomainActivityDocument[]; count: number }> {
+    let queryFilter = this.domainActivityModel.find({});
+
+    if (queryDomainActivityDto.searchOptions.type?.length >= 0) {
+      queryFilter = queryFilter.find({
+        type: queryDomainActivityDto.searchOptions.type,
+      });
+    }
+
+    const _copiedQueryObj = queryFilter.clone();
+    const count = await _copiedQueryObj.count();
+
+    // searchOptions.offset
+    if (queryDomainActivityDto.searchOptions.offset)
+      queryFilter = queryFilter.skip(
+        queryDomainActivityDto.searchOptions.offset *
+          queryDomainActivityDto.searchOptions.pageSize || DEFAULT_PAGE_SIZE,
+      );
+    // searchOptions.pageSize
+    queryFilter = queryFilter.limit(
+      queryDomainActivityDto.searchOptions.pageSize || DEFAULT_PAGE_SIZE,
+    );
+
+    // sortOption
+    switch (queryDomainActivityDto.sortOption) {
+      case 'AMOUNT_ASC':
+        queryFilter = queryFilter.sort({ amount: 1 });
+        break;
+      case 'AMOUNT_DESC':
+        queryFilter = queryFilter.sort({ amount: -1 });
+        break;
+      case 'TIMESTAMP_ASC':
+        queryFilter = queryFilter.sort({ timestamp: 1 });
+        break;
+      case 'TIMESTAMP_DESC':
+        queryFilter = queryFilter.sort({ timestamp: -1 });
+        break;
+      default:
+        break;
+    }
+
+    return {
+      count,
+      domainActivities: await queryFilter.exec(),
+    };
   }
 }

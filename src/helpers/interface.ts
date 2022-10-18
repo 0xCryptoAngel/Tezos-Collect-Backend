@@ -47,6 +47,21 @@ interface I_DOMAIN_SEARCH_VALUE {
   minPrice?: number;
   maxPrice?: number;
 }
+interface I_DOMAIN_ACTIVITY_SEARCH_OPTION {
+  type?: T_DOMAIN_ACTIVITY_TYPE | '';
+  offset?: number;
+  pageSize?: number;
+  name?: string;
+  from?: string;
+  to?: string;
+}
+
+type TYPE_ACTIVITY_SORT_VALUE =
+  | 'AMOUNT_ASC'
+  | 'AMOUNT_DESC'
+  | 'TIMESTAMP_ASC'
+  | 'TIMESTAMP_DESC';
+
 type TYPE_MARKET_ADVANCED_FILTER_VALUE =
   | 'LETTERS_YES'
   | 'LETTERS_NO'
@@ -63,4 +78,6 @@ export type {
   TYPE_MARKET_SORT_VALUE,
   I_DOMAIN_SEARCH_VALUE,
   TYPE_MARKET_ADVANCED_FILTER_VALUE,
+  I_DOMAIN_ACTIVITY_SEARCH_OPTION,
+  TYPE_ACTIVITY_SORT_VALUE,
 };

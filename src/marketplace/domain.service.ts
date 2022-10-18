@@ -155,7 +155,7 @@ export class DomainService {
       domainQueryObj = domainQueryObj.find({
         $or: [{ isForAuction: true }, { isForSale: true }],
       });
-    else {
+    else if (queryDomainDto.searchOptions.domainListed === false) {
       domainQueryObj = domainQueryObj.find({
         $and: [{ isForAuction: false }, { isForSale: false }],
       });
@@ -192,7 +192,6 @@ export class DomainService {
         break;
     }
     // searchOptions.contains
-    console.log(queryDomainDto.searchOptions.contains);
     if (queryDomainDto.searchOptions.contains?.length > 0) {
       addQuery(domainQueryObj, {
         name: new RegExp('(.*' + queryDomainDto.searchOptions.contains + '.*)'),
@@ -283,7 +282,6 @@ export class DomainService {
       }
     });
 
-    // sortOption
     const _copiedDomainQueryObj = domainQueryObj.clone();
     const count = await _copiedDomainQueryObj.count();
 
@@ -297,6 +295,8 @@ export class DomainService {
     domainQueryObj = domainQueryObj.limit(
       queryDomainDto.searchOptions.pageSize,
     );
+
+    // sortOption
     switch (queryDomainDto.sortOption) {
       case 'PRICE_ASC':
         domainQueryObj = domainQueryObj.sort({ price: 1 });
