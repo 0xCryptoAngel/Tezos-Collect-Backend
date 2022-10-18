@@ -1,7 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
-import { Document } from 'mongoose';
+import { SchemaTypes, Document, Types } from 'mongoose';
+import { MORE_COLLECTION_ID } from 'src/helpers/constants';
 import { T_DOMAIN_ACTIVITY_TYPE } from 'src/helpers/interface';
+import { Collection } from './collection.schema';
 
 export type DomainActivityDocument = DomainActivity & Document;
 
@@ -9,6 +11,13 @@ export type DomainActivityDocument = DomainActivity & Document;
 export class DomainActivity {
   @Prop({ index: true, required: true })
   name: string;
+
+  @Prop({
+    type: SchemaTypes.ObjectId,
+    ref: Collection.name,
+    default: MORE_COLLECTION_ID,
+  })
+  collectionId: Types.ObjectId;
 
   @Prop({ index: true, unique: true, required: true })
   uuid: string;

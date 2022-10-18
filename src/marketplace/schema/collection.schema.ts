@@ -21,19 +21,37 @@ export class Collection {
   discordLink: string;
 
   @Prop({ default: 0 })
+  numberOfMinted: number;
+
+  @Prop({ default: 0 })
   numberOfItems: number;
   @Prop({ default: 0 })
   numberOfOwners: number;
 
   @Prop({ default: 0 })
-  totalVolume: number;
-  @Prop({ default: 0 })
   topSale: number;
+
   @Prop({ default: 0 })
   floorPrice: number;
+  @Prop({ default: 0 })
+  floorPriceChange: number;
+
+  @Prop({ default: 0 })
+  totalVolume: number;
 
   @Prop({ default: 0 })
   volumeDay: number;
+  @Prop({ default: 0 })
+  volumeDayChange: number;
+  @Prop({})
+  volumeLastUpdated: Date;
+
+  @Prop({ default: 0 })
+  volumeMonth: number;
+  @Prop({ default: 0 })
+  volumeMonthChange: number;
+  @Prop({ required: true, default: new Date() })
+  volumeMonthLastUpdated: Date;
 }
 
 export const CollectionSchema = SchemaFactory.createForClass(Collection);

@@ -1,17 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Domain } from 'domain';
 import { Model } from 'mongoose';
+import { find } from 'rxjs';
+import { MS_PER_DAY } from 'src/helpers/constants';
 import { UpdateCollectionDto } from './dto/collection.dto';
 import { Collection, CollectionDocument } from './schema/collection.schema';
+import { DomainDocument } from './schema/domain.schema';
+import {
+  DomainActivity,
+  DomainActivityDocument,
+} from './schema/domain_activity.schema';
 
 @Injectable()
 export class CollectionService {
   constructor(
     @InjectModel(Collection.name)
     private readonly collectionModel: Model<CollectionDocument>,
+    @InjectModel(Domain.name)
+    private readonly domainModel: Model<DomainDocument>,
+    @InjectModel(DomainActivity.name)
+    private readonly domainActivityModel: Model<DomainActivityDocument>,
   ) {}
 
-  async findAll(): Promise<Collection[]> {
+  async findAll(): Promise<CollectionDocument[]> {
     const all = await this.collectionModel
       .find()
       .select({
@@ -44,5 +56,95 @@ export class CollectionService {
         },
       )
       .exec();
+  }
+
+  async updateCollections() {
+    const collections = await this.findAll();
+    collections.forEach(async (collection) => {
+      const [
+        numberOfItems,
+        numberOfOwners,
+        volumeDay,
+        volumeMonth,
+        floorPrice,
+      ] = await Promise.all([
+        this.domainModel.find({ collectionId: collection._id }).count(),
+        this.domainModel
+          .find({
+            collectionId: collection._id,
+            owner: { $ne: '' },
+          })
+          .count(),
+        this.domainActivityModel.aggregate([
+          {
+            $match: {
+              collectionId: collection._id,
+              timestamp: {
+                $gte: new Date(new Date().getTime() - MS_PER_DAY),
+              },
+              type: {
+                $in: ['BUY_FROM_SALE', 'COMPLETE_AUCTION', 'SELL_ON_OFFER'],
+              },
+            },
+          },
+          { $group: { _id: null, amount: { $sum: '$amount' } } },
+        ]),
+        this.domainActivityModel.aggregate([
+          {
+            $match: {
+              collectionId: collection._id,
+              timestamp: {
+                $gte: new Date(new Date().getTime() - MS_PER_DAY * 30),
+              },
+              type: {
+                $in: ['BUY_FROM_SALE', 'COMPLETE_AUCTION', 'SELL_ON_OFFER'],
+              },
+            },
+          },
+          { $group: { _id: null, amount: { $sum: '$amount' } } },
+        ]),
+        this.domainModel
+          .findOne({ collectionId: collection._id, price: { $gt: 0 } })
+          .sort({ price: 1 })
+
+          .exec(),
+      ]);
+
+      collection.numberOfItems = numberOfItems;
+      collection.numberOfOwners = numberOfOwners;
+
+      if (volumeDay[0]) {
+        const oldVolumeDay =
+          collection.volumeDay / (1 + collection.volumeDayChange);
+        collection.volumeDay = volumeDay[0].amount;
+        collection.volumeDayChange = collection.volumeDay / oldVolumeDay - 1;
+      } else collection.volumeDay = 0;
+
+      if (floorPrice) {
+        const oldFloorPrice =
+          collection.floorPrice / (1 + collection.floorPriceChange);
+        collection.floorPrice = floorPrice.price;
+        collection.floorPriceChange = collection.floorPrice / oldFloorPrice - 1;
+      }
+
+      if (volumeMonth[0]) {
+        const oldVolumeMonth =
+          collection.volumeMonth / (1 + collection.volumeMonthChange);
+        collection.volumeMonth = volumeMonth[0].amount;
+        collection.volumeMonthChange =
+          collection.volumeMonth / oldVolumeMonth - 1;
+      } else collection.volumeMonth = 0;
+
+      let time = new Date().getTime();
+      time = time - (time % MS_PER_DAY);
+      if (time - collection.volumeLastUpdated.getTime() >= MS_PER_DAY) {
+        collection.volumeLastUpdated = new Date(time);
+      }
+
+      if (time - collection.volumeMonthLastUpdated.getTime() >= MS_PER_DAY * 30)
+        collection.volumeMonthLastUpdated = new Date(time);
+
+      collection.save();
+    });
   }
 }

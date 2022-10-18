@@ -17,6 +17,7 @@ import {
   DomainActivity,
   DomainActivitySchema,
 } from './schema/domain_activity.schema';
+import { CronService } from './cron.service';
 
 @Module({
   providers: [
@@ -24,6 +25,7 @@ import {
     CollectionService,
     DomainService,
     DomainActivityService,
+    CronService,
   ],
   controllers: [
     PresaleController,

@@ -31,6 +31,7 @@ export class DomainActivityService {
         uuid: 0,
       })
       .exec();
+    // all.forEach((item) => item.save());
     return all;
   }
 
@@ -74,6 +75,7 @@ export class DomainActivityService {
         domain.lastSoldAt = new Date();
         collection.totalVolume += createDomainActivityDto.amount;
         collection.volumeDay += createDomainActivityDto.amount;
+        collection.volumeMonth += createDomainActivityDto.amount;
         collection.topSale = Math.max(
           collection.topSale,
           createDomainActivityDto.amount,
