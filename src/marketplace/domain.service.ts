@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { MS_PER_DAY } from 'src/helpers/constants';
 
 import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
 import { Domain, DomainDocument } from './schema/domain.schema';
@@ -150,14 +151,49 @@ export class DomainService {
       queryDomainDto.setQuery(query);
     };
 
-    // searchOptions.domainListed
-    if (queryDomainDto.searchOptions.domainListed === true)
+    if (queryDomainDto.searchOptions.isForAuction === true) {
       domainQueryObj = domainQueryObj.find({
-        $or: [{ isForAuction: true }, { isForSale: true }],
+        isForAuction: true,
+        auctionEndsAt: { $gt: new Date() },
       });
-    else if (queryDomainDto.searchOptions.domainListed === false) {
+    } else if (queryDomainDto.searchOptions.isForSale === true) {
       domainQueryObj = domainQueryObj.find({
-        $and: [{ isForAuction: false }, { isForSale: false }],
+        isForSale: true,
+        saleEndsAt: { $gt: new Date() },
+      });
+    }
+
+    // searchOptions.domainListed
+    else {
+      if (queryDomainDto.searchOptions.domainListed === true)
+        domainQueryObj = domainQueryObj.find({
+          $or: [{ isForAuction: true }, { isForSale: true }],
+        });
+      else if (queryDomainDto.searchOptions.domainListed === false) {
+        domainQueryObj = domainQueryObj.find({
+          $and: [{ isForAuction: false }, { isForSale: false }],
+        });
+      }
+    }
+
+    // searchOptions.isRegistered
+    if (queryDomainDto.searchOptions.isRegistered === true)
+      domainQueryObj = domainQueryObj.find({
+        tokenId: { $gt: 1 },
+      });
+    else if (queryDomainDto.searchOptions.isRegistered === false) {
+      domainQueryObj = domainQueryObj.find({
+        tokenId: { $not: { $gt: 1 } },
+      });
+    }
+    // searchOptions.isExpiring
+    if (queryDomainDto.searchOptions.isExpiring === true)
+      domainQueryObj = domainQueryObj.find({
+        expiresAt: { $lt: new Date(new Date().getTime() + MS_PER_DAY * 15) },
+      });
+    else if (queryDomainDto.searchOptions.isExpiring === false) {
+      domainQueryObj = domainQueryObj.find({
+        expiresAt: { $lt: new Date() },
       });
     }
 
@@ -328,6 +364,33 @@ export class DomainService {
       case 'EXPIRESAT_DESC':
         domainQueryObj = domainQueryObj.sort({ expiresAt: -1 });
         break;
+
+      case 'SALESTARTEDAT_ASC':
+        domainQueryObj = domainQueryObj.sort({ saleStartedAt: 1 });
+        break;
+      case 'SALESTARTEDAT_DESC':
+        domainQueryObj = domainQueryObj.sort({ saleStartedAt: -1 });
+        break;
+      case 'SALEENDSAT_ASC':
+        domainQueryObj = domainQueryObj.sort({ saleEndsAt: 1 });
+        break;
+      case 'SALEENDSAT_DESC':
+        domainQueryObj = domainQueryObj.sort({ saleEndsAt: -1 });
+        break;
+
+      case 'AUCTIONSTARTEDAT_ASC':
+        domainQueryObj = domainQueryObj.sort({ auctionStartedAt: 1 });
+        break;
+      case 'AUCTIONSTARTEDAT_DESC':
+        domainQueryObj = domainQueryObj.sort({ auctionStartedAt: -1 });
+        break;
+      case 'AUCTIONENDSAT_ASC':
+        domainQueryObj = domainQueryObj.sort({ auctionEndsAt: 1 });
+        break;
+      case 'AUCTIONENDSAT_DESC':
+        domainQueryObj = domainQueryObj.sort({ auctionEndsAt: -1 });
+        break;
+
       default:
         break;
     }
