@@ -14,6 +14,7 @@ import { DomainService } from './domain.service';
 import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
 import { CollectionDocument } from './schema/collection.schema';
 import {
+  UpdateAvatarLinkDto,
   UpdateBookedmarkedNamesDto,
   UpdateProfileDto,
 } from './dto/profile.dto';
@@ -48,6 +49,17 @@ export class ProfileController {
       updateBookedmarkedNamesDto,
     );
   }
+  @Put('avatar/:address')
+  async updateAvatarByAddress(
+    @Param('address') address: string,
+    @Body() updateAvatarLinkDto: UpdateAvatarLinkDto,
+  ) {
+    return await this.service.updateAvatarByAddress(
+      address,
+      updateAvatarLinkDto,
+    );
+  }
+
   @Get('favorites/:address')
   async getBookmarkedNamesByAddress(@Param('address') address: string) {
     return await this.service.getBookmarkedNamesByAddress(address);

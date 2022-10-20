@@ -27,6 +27,7 @@
     "@nestjs/mongoose": "^9.0.2",
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/schedule": "^2.0.1",
+    "@taquito/utils": "^14.0.0",
     "crypto-js": "^4.1.1",
     "dotenv": "^16.0.0",
     "mongoose": "^6.2.4",

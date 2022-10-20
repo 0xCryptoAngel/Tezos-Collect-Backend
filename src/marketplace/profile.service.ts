@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { verifySignature } from '@taquito/utils';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DomainService } from './domain.service';
@@ -7,6 +8,7 @@ import {
   ProfileDataDto,
   UpdateProfileDto,
   UpdateBookedmarkedNamesDto,
+  UpdateAvatarLinkDto,
 } from './dto/profile.dto';
 
 import { Domain, DomainDocument } from './schema/domain.schema';
@@ -46,6 +48,34 @@ export class ProfileService {
       .findOneAndUpdate(
         { address },
         { ...updateProfileDto },
+        {
+          returnDocument: 'after',
+          upsert: true,
+        },
+      )
+      .exec();
+  }
+
+  async updateAvatarByAddress(
+    address: string,
+    updateAvatarLinkDto: UpdateAvatarLinkDto,
+  ): Promise<Profile> {
+    if (
+      verifySignature(
+        updateAvatarLinkDto.payloadBytes,
+        updateAvatarLinkDto.publicKey,
+        updateAvatarLinkDto.signature,
+      ) === false
+    ) {
+      throw new HttpException(
+        'PROFILE_S:INVALID_SIGNATURE',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return await this.profileModel
+      .findOneAndUpdate(
+        { address },
+        { avatarLink: updateAvatarLinkDto.avatarLink },
         {
           returnDocument: 'after',
           upsert: true,

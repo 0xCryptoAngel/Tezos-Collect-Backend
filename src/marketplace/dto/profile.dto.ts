@@ -1,6 +1,5 @@
 export class BaseProfileDto {
   address: string;
-  avatarLink: string;
   reversedName: string;
 }
 
@@ -14,4 +13,11 @@ export class ProfileDataDto extends BaseProfileDto {
 
 export class UpdateBookedmarkedNamesDto {
   bookmarkedNames: string[];
+}
+
+export class UpdateAvatarLinkDto {
+  payloadBytes: string;
+  avatarLink: string;
+  signature: string;
+  publicKey: string;
 }
