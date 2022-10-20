@@ -5,15 +5,25 @@ import { MS_PER_DAY } from 'src/helpers/constants';
 
 import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
 import { Domain, DomainDocument } from './schema/domain.schema';
+import { Profile, ProfileDocument } from './schema/profile.schema';
 
 @Injectable()
 export class DomainService {
   constructor(
     @InjectModel(Domain.name)
     private readonly domainModel: Model<DomainDocument>,
+    @InjectModel(Profile.name)
+    private readonly profileModel: Model<ProfileDocument>,
   ) {}
 
   async testFunction() {
+    // const _profile = await this.profileModel
+    //   .findOne({ address: 'ASDF' })
+    //   .exec();
+    // if (_profile) {
+    //   return _profile;
+    // }
+    // return await this.profileModel.create({ address: 'ASDF' });
     // await this.domainModel.updateMany(
     //   {
     //     isForAuction: true,
@@ -136,6 +146,9 @@ export class DomainService {
     }
     return _domain;
   }
+  async getDomainHoldingByAddress(address: string): Promise<number> {
+    return await this.domainModel.findOne({ owner: address }).count();
+  }
 
   async queryDomain(
     queryDomainDto: QueryDomainDto,
@@ -227,6 +240,14 @@ export class DomainService {
       default:
         break;
     }
+
+    // searchOptions.owner
+    if (queryDomainDto.searchOptions.owner?.length > 0) {
+      domainQueryObj = domainQueryObj.find({
+        owner: queryDomainDto.searchOptions.owner,
+      });
+    }
+
     // searchOptions.contains
     if (queryDomainDto.searchOptions.contains?.length > 0) {
       addQuery(domainQueryObj, {

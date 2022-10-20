@@ -51,13 +51,14 @@ interface I_DOMAIN_SEARCH_VALUE {
     | 'SHOW_FEATURED';
   offset?: number;
   pageSize?: number;
-  contains?: string;
   startWith?: string;
   endWith?: string;
   minLength?: number;
   maxLength?: number;
   minPrice?: number;
   maxPrice?: number;
+  contains?: string;
+  owner?: string;
 }
 interface I_DOMAIN_ACTIVITY_SEARCH_OPTION {
   type?: T_DOMAIN_ACTIVITY_TYPE | '';

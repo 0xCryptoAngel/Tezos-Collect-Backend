@@ -18,6 +18,9 @@ import {
   DomainActivitySchema,
 } from './schema/domain_activity.schema';
 import { CronService } from './cron.service';
+import { ProfileService } from './profile.service';
+import { ProfileController } from './profile.controller';
+import { Profile, ProfileSchema } from './schema/profile.schema';
 
 @Module({
   providers: [
@@ -26,12 +29,14 @@ import { CronService } from './cron.service';
     DomainService,
     DomainActivityService,
     CronService,
+    ProfileService,
   ],
   controllers: [
     PresaleController,
     CollectionController,
     DomainController,
     DomainActivityController,
+    ProfileController,
   ],
   imports: [
     MongooseModule.forFeature(
@@ -40,6 +45,7 @@ import { CronService } from './cron.service';
         { name: Collection.name, schema: CollectionSchema },
         { name: Domain.name, schema: DomainSchema },
         { name: DomainActivity.name, schema: DomainActivitySchema },
+        { name: Profile.name, schema: ProfileSchema },
       ],
       TEZOS_COLLECT_NETWORK,
     ),

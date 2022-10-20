@@ -9,12 +9,15 @@ import {
   CreateDomainActivityDto,
   QueryDomainActivityDto,
 } from './dto/domain_activity.dto';
+import { ProfileService } from './profile.service';
+import { CollectionDocument } from './schema/collection.schema';
 import { DomainDocument } from './schema/domain.schema';
 
 import {
   DomainActivity,
   DomainActivityDocument,
 } from './schema/domain_activity.schema';
+import { Profile, ProfileDocument } from './schema/profile.schema';
 
 @Injectable()
 export class DomainActivityService {
@@ -23,7 +26,19 @@ export class DomainActivityService {
     private readonly domainActivityModel: Model<DomainActivityDocument>,
     private readonly domainService: DomainService,
     private readonly collectionService: CollectionService,
+
+    @InjectModel(Profile.name)
+    private readonly profileModel: Model<ProfileDocument>,
   ) {}
+
+  async findAProfile(address: string): Promise<ProfileDocument> {
+    const _profile = await this.profileModel.findOne({ address }).exec();
+
+    if (_profile) {
+      return _profile;
+    }
+    return await this.profileModel.create({ address });
+  }
 
   async findAll(): Promise<DomainActivity[]> {
     const all = await this.domainActivityModel
@@ -41,6 +56,17 @@ export class DomainActivityService {
   async activityByDomain(name: string): Promise<DomainActivity[]> {
     const all = await this.domainActivityModel
       .find({ name })
+      .select({
+        _id: 0,
+        __v: 0,
+        uuid: 0,
+      })
+      .exec();
+    return all;
+  }
+  async activityByAddress(address: string): Promise<DomainActivity[]> {
+    const all = await this.domainActivityModel
+      .find({ $or: [{ from: address }, { to: address }] })
       .select({
         _id: 0,
         __v: 0,
@@ -67,9 +93,15 @@ export class DomainActivityService {
     const domain: DomainDocument = await this.domainService.getDomainByName(
       createDomainActivityDto.name,
     );
-    const collection = await this.collectionService.findOneById(
-      domain.collectionId,
-    );
+    const [collection, profileFrom, profileTo]: [
+      CollectionDocument,
+      ProfileDocument,
+      ProfileDocument,
+    ] = await Promise.all([
+      this.collectionService.findOneById(domain.collectionId),
+      this.findAProfile(createDomainActivityDto.from),
+      this.findAProfile(createDomainActivityDto.to),
+    ]);
     switch (createDomainActivityDto.type) {
       case 'COMPLETE_AUCTION':
       case 'BUY_FROM_SALE':
@@ -83,6 +115,10 @@ export class DomainActivityService {
           collection.topSale,
           createDomainActivityDto.amount,
         );
+        profileTo.totalVolume += createDomainActivityDto.amount;
+        profileFrom.totalVolume += createDomainActivityDto.amount;
+        profileFrom.save();
+        profileTo.save();
         domain.save();
         collection.save();
         break;
@@ -124,6 +160,16 @@ export class DomainActivityService {
     if (queryDomainActivityDto.searchOptions.type?.length >= 0) {
       queryFilter = queryFilter.find({
         type: queryDomainActivityDto.searchOptions.type,
+      });
+    }
+    if (queryDomainActivityDto.searchOptions.from?.length >= 0) {
+      queryFilter = queryFilter.find({
+        from: queryDomainActivityDto.searchOptions.from,
+      });
+    }
+    if (queryDomainActivityDto.searchOptions.to?.length >= 0) {
+      queryFilter = queryFilter.find({
+        to: queryDomainActivityDto.searchOptions.to,
       });
     }
 

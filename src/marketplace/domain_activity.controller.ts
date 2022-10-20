@@ -14,9 +14,14 @@ export class DomainActivityController {
     return await this.service.findAll();
   }
 
-  @Get(':domain')
+  @Get('domain/:domain')
   async activityByDomain(@Param('domain') domain: string) {
     return await this.service.activityByDomain(domain);
+  }
+
+  @Get('address/:address')
+  async activityByAddress(@Param('address') address: string) {
+    return await this.service.activityByAddress(address);
   }
 
   @Post()
