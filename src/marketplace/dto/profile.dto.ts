@@ -11,3 +11,7 @@ export class UpdateProfileDto extends BaseProfileDto {
 export class ProfileDataDto extends BaseProfileDto {
   holding: number;
 }
+
+export class UpdateBookedmarkedNamesDto {
+  bookmarkedNames: string[];
+}

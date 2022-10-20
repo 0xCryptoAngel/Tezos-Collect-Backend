@@ -3,7 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DomainService } from './domain.service';
 import { DomainActivityService } from './domain_activity.service';
-import { ProfileDataDto, UpdateProfileDto } from './dto/profile.dto';
+import {
+  ProfileDataDto,
+  UpdateProfileDto,
+  UpdateBookedmarkedNamesDto,
+} from './dto/profile.dto';
 
 import { Domain, DomainDocument } from './schema/domain.schema';
 import { Profile, ProfileDocument } from './schema/profile.schema';
@@ -24,13 +28,7 @@ export class ProfileService {
 
   async getInfoByAddress(address: string): Promise<ProfileDataDto> {
     const [profile, holding] = await Promise.all([
-      this.profileModel
-        .findOne({ address })
-        .select({
-          _id: 0,
-          __v: 0,
-        })
-        .exec(),
+      this.domainActivityService.findAProfile(address),
       this.domainService.getDomainHoldingByAddress(address),
     ]);
 
@@ -54,5 +52,28 @@ export class ProfileService {
         },
       )
       .exec();
+  }
+  async updateBookmarkedNamesByAddress(
+    address: string,
+    updateBookedmarkedNamesDto: UpdateBookedmarkedNamesDto,
+  ): Promise<Profile> {
+    return await this.profileModel
+      .findOneAndUpdate(
+        { address },
+        {
+          address,
+          bookmarkedNames: updateBookedmarkedNamesDto.bookmarkedNames,
+        },
+        {
+          returnDocument: 'after',
+          upsert: true,
+        },
+      )
+      .exec();
+  }
+  async getBookmarkedNamesByAddress(address: string): Promise<string[]> {
+    const profile = await this.profileModel.findOne({ address }).exec();
+    if (profile) return profile.bookmarkedNames;
+    else return [];
   }
 }

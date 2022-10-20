@@ -1,8 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
-import { Collection } from './collection.schema';
-import { SchemaTypes, Document, Types } from 'mongoose';
-import { MORE_COLLECTION_ID } from 'src/helpers/constants';
+import { Document } from 'mongoose';
 
 export type ProfileDocument = Profile & Document;
 
@@ -19,6 +17,9 @@ export class Profile {
 
   @Prop({ default: 0 })
   totalVolume: number;
+
+  @Prop({ default: [] })
+  bookmarkedNames: string[];
 }
 
 export const ProfileSchema = SchemaFactory.createForClass(Profile);

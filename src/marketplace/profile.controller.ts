@@ -13,7 +13,10 @@ import { ProfileService } from './profile.service';
 import { DomainService } from './domain.service';
 import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
 import { CollectionDocument } from './schema/collection.schema';
-import { UpdateProfileDto } from './dto/profile.dto';
+import {
+  UpdateBookedmarkedNamesDto,
+  UpdateProfileDto,
+} from './dto/profile.dto';
 
 @Controller('profile')
 export class ProfileController {
@@ -34,5 +37,19 @@ export class ProfileController {
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
     return await this.service.updateOneByAddress(address, updateProfileDto);
+  }
+  @Put('favorites/:address')
+  async updateBookmarkedNamesByAddress(
+    @Param('address') address: string,
+    @Body() updateBookedmarkedNamesDto: UpdateBookedmarkedNamesDto,
+  ) {
+    return await this.service.updateBookmarkedNamesByAddress(
+      address,
+      updateBookedmarkedNamesDto,
+    );
+  }
+  @Get('favorites/:address')
+  async getBookmarkedNamesByAddress(@Param('address') address: string) {
+    return await this.service.getBookmarkedNamesByAddress(address);
   }
 }
