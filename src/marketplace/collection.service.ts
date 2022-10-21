@@ -4,6 +4,7 @@ import { Domain } from 'domain';
 import { Model } from 'mongoose';
 import { find } from 'rxjs';
 import { MS_PER_DAY } from 'src/helpers/constants';
+import { I_COLLECTION_HOLDER } from 'src/helpers/interface';
 import { UpdateCollectionDto } from './dto/collection.dto';
 import { Collection, CollectionDocument } from './schema/collection.schema';
 import { DomainDocument } from './schema/domain.schema';
@@ -34,6 +35,19 @@ export class CollectionService {
     // all.forEach((item) => item.save());
     return all;
   }
+  async getHolderInformation(slug: string): Promise<I_COLLECTION_HOLDER[]> {
+    const collection = await this.findOneBySlug(slug);
+    const holders: I_COLLECTION_HOLDER[] = await this.domainModel.aggregate([
+      { $match: { collectionId: collection._id, isRegistered: true } },
+      {
+        $group: { _id: '$owner', count: { $sum: 1 } },
+      },
+      { $sort: { count: -1 } },
+      { $limit: 50 },
+    ]);
+    return holders;
+  }
+
   async findOneBySlug(slug: string): Promise<CollectionDocument> {
     return await this.collectionModel.findOne({ slug }).exec();
   }
@@ -62,12 +76,16 @@ export class CollectionService {
     const collections = await this.findAll();
     collections.forEach(async (collection) => {
       const [
+        numberOfMinted,
         numberOfItems,
         numberOfOwners,
         volumeDay,
         volumeMonth,
         floorPrice,
       ] = await Promise.all([
+        this.domainModel
+          .find({ collectionId: collection._id, isRegistered: true })
+          .count(),
         this.domainModel.find({ collectionId: collection._id }).count(),
         this.domainModel
           .find({
@@ -110,6 +128,7 @@ export class CollectionService {
           .exec(),
       ]);
 
+      collection.numberOfMinted = numberOfMinted;
       collection.numberOfItems = numberOfItems;
       collection.numberOfOwners = numberOfOwners;
 
@@ -117,7 +136,8 @@ export class CollectionService {
         const oldVolumeDay =
           collection.volumeDay / (1 + collection.volumeDayChange);
         collection.volumeDay = volumeDay[0].amount;
-        collection.volumeDayChange = collection.volumeDay / oldVolumeDay - 1;
+        collection.volumeDayChange =
+          collection.volumeDay / (oldVolumeDay + 0.1) - 1;
       } else collection.volumeDay = 0;
 
       if (floorPrice) {

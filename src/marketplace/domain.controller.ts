@@ -66,6 +66,7 @@ export class DomainController {
   async getDomainByName(@Param('name') name: string) {
     return await this.service.getDomainByName(name);
   }
+
   @Post('/query')
   async queryDomain(@Body() queryDomainDto: QueryDomainDto) {
     return await this.service.queryDomain(queryDomainDto);

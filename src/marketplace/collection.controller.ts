@@ -26,4 +26,9 @@ export class CollectionController {
   ) {
     return await this.service.updateOneBySlug(slug, updateCollectionDto);
   }
+
+  @Get('holder/:slug')
+  async getHolderInformation(@Param('slug') slug: string) {
+    return await this.service.getHolderInformation(slug);
+  }
 }

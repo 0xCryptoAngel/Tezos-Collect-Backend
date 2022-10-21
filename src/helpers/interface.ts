@@ -59,6 +59,7 @@ interface I_DOMAIN_SEARCH_VALUE {
   maxPrice?: number;
   contains?: string;
   owner?: string;
+  collectionId?: string;
 }
 interface I_DOMAIN_ACTIVITY_SEARCH_OPTION {
   type?: T_DOMAIN_ACTIVITY_TYPE | '';
@@ -67,6 +68,12 @@ interface I_DOMAIN_ACTIVITY_SEARCH_OPTION {
   name?: string;
   from?: string;
   to?: string;
+  collectionId?: string;
+}
+
+interface I_COLLECTION_HOLDER {
+  _id: string;
+  count: number;
 }
 
 type TYPE_ACTIVITY_SORT_VALUE =
@@ -93,4 +100,5 @@ export type {
   TYPE_MARKET_ADVANCED_FILTER_VALUE,
   I_DOMAIN_ACTIVITY_SEARCH_OPTION,
   TYPE_ACTIVITY_SORT_VALUE,
+  I_COLLECTION_HOLDER,
 };

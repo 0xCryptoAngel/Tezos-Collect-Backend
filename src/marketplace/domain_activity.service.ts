@@ -173,6 +173,13 @@ export class DomainActivityService {
       });
     }
 
+    // collectionId
+    if (queryDomainActivityDto.searchOptions.collectionId?.length >= 0) {
+      queryFilter = queryFilter.find({
+        collectionId: queryDomainActivityDto.searchOptions.collectionId,
+      });
+    }
+
     const _copiedQueryObj = queryFilter.clone();
     const count = await _copiedQueryObj.count();
 

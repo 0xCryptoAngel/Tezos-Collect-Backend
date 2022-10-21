@@ -248,6 +248,13 @@ export class DomainService {
       });
     }
 
+    // searchOptions.collectionId
+    if (queryDomainDto.searchOptions.collectionId?.length > 0) {
+      domainQueryObj = domainQueryObj.find({
+        collectionId: queryDomainDto.searchOptions.collectionId,
+      });
+    }
+
     // searchOptions.contains
     if (queryDomainDto.searchOptions.contains?.length > 0) {
       addQuery(domainQueryObj, {
