@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-} from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post } from '@nestjs/common';
 
 import { PresaleInfoService } from './marketplace.service';
 

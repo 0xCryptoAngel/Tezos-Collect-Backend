@@ -1,18 +1,5 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpException,
-  HttpStatus,
-  Param,
-  Post,
-  Put,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Put } from '@nestjs/common';
 import { ProfileService } from './profile.service';
-import { DomainService } from './domain.service';
-import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
-import { CollectionDocument } from './schema/collection.schema';
 import {
   UpdateAvatarLinkDto,
   UpdateBookedmarkedNamesDto,

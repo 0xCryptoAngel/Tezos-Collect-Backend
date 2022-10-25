@@ -104,9 +104,18 @@ export class DomainService {
       {
         seconds: 87600 * 30, // 30 days
       },
+      {
+        seconds: 0, // 30 days
+      },
     ];
     const result: Domain[][] = await Promise.all(
-      durations.map((item, index) => {
+      durations.map((item) => {
+        if (item.seconds === 0)
+          return this.domainModel
+            .find({})
+            .sort({ lastSoldAmount: -1 })
+            .limit(5)
+            .exec();
         return (
           this.domainModel
             .find({

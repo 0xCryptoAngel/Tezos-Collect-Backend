@@ -1,8 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { Cron } from '@nestjs/schedule';
-import { Model } from 'mongoose';
-import axios from 'axios';
 import { DomainService } from './domain.service';
 import { CollectionService } from './collection.service';
 require('dotenv').config();

@@ -11,7 +11,6 @@ import {
   UpdateAvatarLinkDto,
 } from './dto/profile.dto';
 
-import { Domain, DomainDocument } from './schema/domain.schema';
 import { Profile, ProfileDocument } from './schema/profile.schema';
 
 @Injectable()

@@ -9,7 +9,6 @@ import {
   CreateDomainActivityDto,
   QueryDomainActivityDto,
 } from './dto/domain_activity.dto';
-import { ProfileService } from './profile.service';
 import { CollectionDocument } from './schema/collection.schema';
 import { DomainDocument } from './schema/domain.schema';
 

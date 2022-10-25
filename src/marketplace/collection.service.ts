@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Domain } from 'domain';
 import { Model } from 'mongoose';
-import { find } from 'rxjs';
 import { MS_PER_DAY } from 'src/helpers/constants';
 import { I_COLLECTION_HOLDER } from 'src/helpers/interface';
 import { UpdateCollectionDto } from './dto/collection.dto';
