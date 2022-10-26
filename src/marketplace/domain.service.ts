@@ -6,7 +6,7 @@ import { MS_PER_DAY } from 'src/helpers/constants';
 import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
 import { Domain, DomainDocument } from './schema/domain.schema';
 import { Profile, ProfileDocument } from './schema/profile.schema';
-
+import fetch from 'node-fetch';
 @Injectable()
 export class DomainService {
   constructor(
@@ -61,7 +61,9 @@ export class DomainService {
     return all;
   }
 
-  async getDomainsByCollectionId(collectionId: string): Promise<Domain[]> {
+  async getDomainsByCollectionId(
+    collectionId: string,
+  ): Promise<DomainDocument[]> {
     const all = await this.domainModel.find({ collectionId }).exec();
     return all;
   }
@@ -435,5 +437,104 @@ export class DomainService {
     console.log(domainQueryObj.getQuery());
 
     return { count, domains: await domainQueryObj.exec() };
+  }
+
+  async createCollection() {
+    const domainNames: string[] = [];
+    for (let i = 0; i < 1; i++) domainNames.push(`${i}`.padStart(3, '0'));
+    let cnt = 0;
+    domainNames.forEach(async (name) => {
+      const domain = new Domain();
+      domain.name = name;
+      const result = await fetch('https://api.tezos.domains/graphql', {
+        headers: {
+          accept: '*/*, application/json',
+          'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+          'content-type': 'application/json',
+          'sec-ch-ua':
+            '"Chromium";v="106", "Google Chrome";v="106", "Not;A=Brand";v="99"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Windows"',
+          'sec-fetch-dest': 'empty',
+          'sec-fetch-mode': 'cors',
+          'sec-fetch-site': 'same-origin',
+          Referer: 'https://api.tezos.domains/playground',
+          'Referrer-Policy': 'same-origin',
+        },
+        body: `{\"operationName\":null,\"variables\":{},\"query\":\"{\\n  domain(name: \\\"${name}.tez\\\") {\\n    owner\\n    name\\n    reverseRecord {\\n      address\\n    }\\n    expiresAtUtc\\n    tokenId\\n    operators {\\n      address\\n    }\\n    lastAuction {\\n      highestBid {\\n        amount\\n      }\\n      endsAtUtc\\n    }\\n  }\\n}\\n\"}`,
+        method: 'POST',
+      });
+      const domainObj = (await result.json()).data.domain;
+      if (domainObj) {
+        domain.isRegistered = true;
+        domain.owner = domainObj.owner;
+        domain.isPalindromes =
+          domain.name === domain.name.split('').reverse().join('');
+        domain.expiresAt = new Date(domainObj.expiresAtUtc);
+        domain.tokenId = domainObj.tokenId;
+        domain.lastSoldAmount = domainObj.lastAuction?.highestBid?.amount || 0;
+        domain.lastSoldAt = new Date(
+          domainObj.lastAuction?.endsAtUtc || new Date(0),
+        );
+      } else {
+        domain.isRegistered = false;
+        domain.tokenId = -1;
+      }
+      this.domainModel.create(domain);
+      console.log(
+        `${++cnt} / ${domainNames.length}`,
+        domain.name,
+        domain.isRegistered,
+      );
+    });
+  }
+  async updateByCollection(collectionId: string) {
+    const domains: DomainDocument[] = await this.getDomainsByCollectionId(
+      collectionId,
+    );
+    console.log(domains.length);
+    let cnt = 0;
+    domains.forEach(async (domain) => {
+      const result = await fetch('https://api.tezos.domains/graphql', {
+        headers: {
+          accept: '*/*, application/json',
+          'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+          'content-type': 'application/json',
+          'sec-ch-ua':
+            '"Chromium";v="106", "Google Chrome";v="106", "Not;A=Brand";v="99"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Windows"',
+          'sec-fetch-dest': 'empty',
+          'sec-fetch-mode': 'cors',
+          'sec-fetch-site': 'same-origin',
+          Referer: 'https://api.tezos.domains/playground',
+          'Referrer-Policy': 'same-origin',
+        },
+        body: `{\"operationName\":null,\"variables\":{},\"query\":\"{\\n  domain(name: \\\"${domain.name}.tez\\\") {\\n    owner\\n    name\\n    reverseRecord {\\n      address\\n    }\\n    expiresAtUtc\\n    tokenId\\n    operators {\\n      address\\n    }\\n    lastAuction {\\n      highestBid {\\n        amount\\n      }\\n      endsAtUtc\\n    }\\n  }\\n}\\n\"}`,
+        method: 'POST',
+      });
+      const domainObj = (await result.json()).data.domain;
+      if (domainObj) {
+        domain.isRegistered = true;
+        domain.owner = domainObj.owner;
+        domain.isPalindromes =
+          domain.name === domain.name.split('').reverse().join('');
+        domain.expiresAt = new Date(domainObj.expiresAtUtc);
+        domain.tokenId = domainObj.tokenId;
+        domain.lastSoldAmount = domainObj.lastAuction?.highestBid?.amount || 0;
+        domain.lastSoldAt = new Date(
+          domainObj.lastAuction?.endsAtUtc || new Date(0),
+        );
+      } else {
+        domain.isRegistered = false;
+        domain.tokenId = -1;
+      }
+      domain.save();
+      console.log(
+        `${++cnt} / ${domains.length}`,
+        domain.name,
+        domain.isRegistered,
+      );
+    });
   }
 }

@@ -76,4 +76,13 @@ export class DomainController {
     // 634b6b5273871fad49b322fd
     return await this.service.testFunction();
   }
+
+  @Get('/refresh-collection/:collectionId')
+  async updateByCollection(@Param('collectionId') collectionId: string) {
+    return await this.service.updateByCollection(collectionId);
+  }
+  @Get('/create-collection')
+  async createCollection() {
+    return await this.service.createCollection();
+  }
 }

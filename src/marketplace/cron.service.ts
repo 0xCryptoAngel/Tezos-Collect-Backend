@@ -13,7 +13,7 @@ export class CronService {
     private readonly collectionService: CollectionService,
   ) {}
   // refetch new pairs every 5 minutes
-  @Cron('*/5 * * * * *')
+  @Cron('* */5 * * * *')
   async updateCollections() {
     this.collectionService.updateCollections();
     // this.logger.verbose(new Date());
