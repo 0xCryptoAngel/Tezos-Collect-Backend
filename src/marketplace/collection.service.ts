@@ -86,12 +86,22 @@ export class CollectionService {
           .find({ collectionId: collection._id, isRegistered: true })
           .count(),
         this.domainModel.find({ collectionId: collection._id }).count(),
-        this.domainModel
-          .find({
-            collectionId: collection._id,
-            owner: { $ne: '' },
-          })
-          .count(),
+        this.domainModel.aggregate([
+          {
+            $match: {
+              collectionId: collection._id,
+            },
+          },
+          {
+            $group: { _id: '$owner', owners: { $addToSet: '$owner' } },
+          },
+          {
+            $unwind: '$owners',
+          },
+          {
+            $group: { _id: null, ownerCount: { $sum: 1 } },
+          },
+        ]),
         this.domainActivityModel.aggregate([
           {
             $match: {
@@ -129,8 +139,12 @@ export class CollectionService {
 
       collection.numberOfMinted = numberOfMinted;
       collection.numberOfItems = numberOfItems;
-      collection.numberOfOwners = numberOfOwners;
-
+      collection.numberOfOwners = numberOfOwners[0].ownerCount;
+      // console.log(
+      //   collection.slug,
+      //   numberOfMinted,
+      //   numberOfOwners[0].ownerCount,
+      // );
       if (volumeDay[0]) {
         const oldVolumeDay =
           collection.volumeDay / (1 + collection.volumeDayChange);

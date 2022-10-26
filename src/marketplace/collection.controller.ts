@@ -23,4 +23,9 @@ export class CollectionController {
   async getHolderInformation(@Param('slug') slug: string) {
     return await this.service.getHolderInformation(slug);
   }
+
+  @Get('test')
+  async testFunc() {
+    this.service.updateCollections();
+  }
 }

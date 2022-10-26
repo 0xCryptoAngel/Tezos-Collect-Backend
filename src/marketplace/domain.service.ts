@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { MS_PER_DAY } from 'src/helpers/constants';
 
 import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
@@ -439,13 +439,28 @@ export class DomainService {
     return { count, domains: await domainQueryObj.exec() };
   }
 
+  // generate 10k collection
   async createCollection() {
+    // await this.domainModel
+    //   .deleteMany({
+    //     name: /.tez$/,
+    //   })
+    //   .exec();
+    // return;
     const domainNames: string[] = [];
-    for (let i = 0; i < 1; i++) domainNames.push(`${i}`.padStart(3, '0'));
-    let cnt = 0;
-    domainNames.forEach(async (name) => {
-      const domain = new Domain();
-      domain.name = name;
+    const collectionId = new Types.ObjectId('633b35c2965d76ae5e25bb81');
+    for (let i = 0; i < 100000; i++) domainNames.push(`${i}`.padStart(5, '0'));
+
+    const batchCnt = 10;
+    for (let i = 0; i < domainNames.length; i += batchCnt) {
+      const numArr = Array.from({ length: batchCnt }, (_, _i) => _i + i);
+
+      const domains = await Promise.all(
+        numArr.map((index) => this.getDomainByName(domainNames[index])),
+      );
+      const names = numArr.map((index) => `${domainNames[index]}.tez`);
+      console.log(JSON.stringify(names));
+
       const result = await fetch('https://api.tezos.domains/graphql', {
         headers: {
           accept: '*/*, application/json',
@@ -461,32 +476,44 @@ export class DomainService {
           Referer: 'https://api.tezos.domains/playground',
           'Referrer-Policy': 'same-origin',
         },
-        body: `{\"operationName\":null,\"variables\":{},\"query\":\"{\\n  domain(name: \\\"${name}.tez\\\") {\\n    owner\\n    name\\n    reverseRecord {\\n      address\\n    }\\n    expiresAtUtc\\n    tokenId\\n    operators {\\n      address\\n    }\\n    lastAuction {\\n      highestBid {\\n        amount\\n      }\\n      endsAtUtc\\n    }\\n  }\\n}\\n\"}`,
+        body: `{"operationName":null,"variables":{},"query":"{\\n  domains(where: {name: {in: ${JSON.stringify(
+          names,
+        ).replace(
+          /"/g,
+          `\\"`,
+        )} }}) {\\n    totalCount\\n    items {\\n      name\\n      owner\\n      tokenId\\n      expiresAtUtc\\n      lastAuction {\\n        endsAtUtc\\n        highestBid {\\n          amount\\n        }\\n      }\\n    }\\n    pageInfo {\\n      hasNextPage\\n      endCursor\\n      startCursor\\n    }\\n  }\\n}\\n"}`,
         method: 'POST',
       });
-      const domainObj = (await result.json()).data.domain;
-      if (domainObj) {
-        domain.isRegistered = true;
-        domain.owner = domainObj.owner;
-        domain.isPalindromes =
-          domain.name === domain.name.split('').reverse().join('');
-        domain.expiresAt = new Date(domainObj.expiresAtUtc);
-        domain.tokenId = domainObj.tokenId;
-        domain.lastSoldAmount = domainObj.lastAuction?.highestBid?.amount || 0;
-        domain.lastSoldAt = new Date(
-          domainObj.lastAuction?.endsAtUtc || new Date(0),
+      const domainObjs = (await result.json()).data.domains.items;
+      // console.log(domainObjs);
+      // const domainObj = (await result.json()).data.domains.items;
+      names.forEach((name, index) => {
+        const domain = domains[index];
+        const domainObj = domainObjs.find(
+          (item) => item.name === `${domain.name}.tez`,
         );
-      } else {
-        domain.isRegistered = false;
-        domain.tokenId = -1;
-      }
-      this.domainModel.create(domain);
-      console.log(
-        `${++cnt} / ${domainNames.length}`,
-        domain.name,
-        domain.isRegistered,
-      );
-    });
+        domain.collectionId = collectionId;
+
+        if (domainObj) {
+          domain.isRegistered = true;
+          domain.owner = domainObj.owner;
+          domain.isPalindromes =
+            domain.name === domain.name.split('').reverse().join('');
+          domain.expiresAt = new Date(domainObj.expiresAtUtc);
+          domain.tokenId = domainObj.tokenId;
+          domain.lastSoldAmount =
+            domainObj.lastAuction?.highestBid?.amount || 0;
+          domain.lastSoldAt = new Date(
+            domainObj.lastAuction?.endsAtUtc || new Date(0),
+          );
+        } else {
+          domain.isRegistered = false;
+          domain.tokenId = -1;
+        }
+        // console.log(domain.name, domainObj?.name, domainObj?.owner);
+        domain.save();
+      });
+    }
   }
   async updateByCollection(collectionId: string) {
     const domains: DomainDocument[] = await this.getDomainsByCollectionId(
