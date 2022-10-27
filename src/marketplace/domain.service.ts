@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { MS_PER_DAY } from 'src/helpers/constants';
+import { MS_PER_DAY, TEZOS_COLLECTION_IDS } from 'src/helpers/constants';
 
 import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
 import { Domain, DomainDocument } from './schema/domain.schema';
@@ -79,9 +79,18 @@ export class DomainService {
 
     if (
       updateDomainDto.name === updateDomainDto.name.split('').reverse().join('')
-    )
+    ) {
+      updateDomainDto.tags.push('palindromes');
       updateDomainDto.isPalindromes = true;
-    else updateDomainDto.isPalindromes = false;
+    } else updateDomainDto.isPalindromes = false;
+
+    if (updateDomainDto.name.indexOf('-') >= 0) {
+      updateDomainDto.collectionId = TEZOS_COLLECTION_IDS['HYPEN'];
+      // console.log(updateDomainDto);
+    } else if (
+      parseInt(updateDomainDto.name).toString() == updateDomainDto.name
+    ) {
+    }
 
     return await this.domainModel
       .findOneAndUpdate(
