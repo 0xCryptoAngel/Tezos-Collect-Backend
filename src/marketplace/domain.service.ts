@@ -81,6 +81,7 @@ export class DomainService {
       updateDomainDto.name === updateDomainDto.name.split('').reverse().join('')
     ) {
       updateDomainDto.tags.push('palindromes');
+      updateDomainDto.tags = Array.from(new Set(updateDomainDto.tags));
       updateDomainDto.isPalindromes = true;
     } else updateDomainDto.isPalindromes = false;
 
