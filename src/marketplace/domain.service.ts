@@ -637,6 +637,10 @@ export class DomainService {
           // console.log(domain);
         } else if (parseInt(domain.name).toString() == domain.name) {
         } else if (/\d/.test(domain.name)) {
+        } else if (
+          domain.collectionId ==
+          new Types.ObjectId(TEZOS_COLLECTION_IDS['COUNTRIES'])
+        ) {
         } else if (domain.name.length === 3)
           domain.collectionId = new Types.ObjectId(TEZOS_COLLECTION_IDS['3LD']);
         else if (domain.name.length === 4)
