@@ -7,6 +7,7 @@ import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
 import { Domain, DomainDocument } from './schema/domain.schema';
 import { Profile, ProfileDocument } from './schema/profile.schema';
 import fetch from 'node-fetch';
+import { Setting, SettingDocument } from './schema/settings.schema';
 @Injectable()
 export class DomainService {
   constructor(
@@ -14,6 +15,8 @@ export class DomainService {
     private readonly domainModel: Model<DomainDocument>,
     @InjectModel(Profile.name)
     private readonly profileModel: Model<ProfileDocument>,
+    @InjectModel(Setting.name)
+    private readonly settingModel: Model<SettingDocument>,
   ) {}
 
   async testFunction() {
@@ -91,7 +94,13 @@ export class DomainService {
     } else if (
       parseInt(updateDomainDto.name).toString() == updateDomainDto.name
     ) {
-    }
+    } else if (/\d/.test(updateDomainDto.name)) {
+    } else if (updateDomainDto.name.length === 3)
+      updateDomainDto.collectionId = TEZOS_COLLECTION_IDS['3LD'];
+    else if (updateDomainDto.name.length === 4)
+      updateDomainDto.collectionId = TEZOS_COLLECTION_IDS['4LD'];
+    else if (updateDomainDto.name.length === 5)
+      updateDomainDto.collectionId = TEZOS_COLLECTION_IDS['5LD'];
 
     return await this.domainModel
       .findOneAndUpdate(
@@ -160,10 +169,15 @@ export class DomainService {
       .exec();
     return result;
   }
-  async getDomainByName(name: string): Promise<DomainDocument> {
+  async getDomainByName(
+    name: string,
+    tokenId: number = 0,
+    isRegistered: boolean = false,
+    owner: string = '',
+  ): Promise<DomainDocument> {
     let _domain = await this.domainModel.findOne({ name }).exec();
     if (_domain === null) {
-      _domain = new this.domainModel({ name });
+      _domain = new this.domainModel({ name, tokenId, isRegistered, owner });
     }
     return _domain;
   }
@@ -574,4 +588,85 @@ export class DomainService {
       );
     });
   }
+
+  async fetchNewDomains() {
+    // await this.settingModel.create({});
+    const setting = await this.settingModel.findOne().exec();
+    const result = await fetch('https://data.objkt.com/v3/graphql', {
+      headers: {
+        accept: 'application/json',
+        'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+        'content-type': 'application/json',
+        'sec-ch-ua':
+          '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        cookie: 'ai_user=QPsH+kLj3D18rTkDqD8Ut8|2022-09-22T05:55:26.464Z',
+        Referer: 'https://data.objkt.com/explore/',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+      },
+      body: `{\"query\":\"query MyQuery {\\n  token(\\n    where: {fa_contract: {_eq: \\\"KT1GBZmSxmnKJXGMdMLbugPfLyUPmuLSMwKS\\\"}, pk: {_gt: ${setting.lastPk}}}\\n    order_by: {pk: asc}\\n  ) {\\n    name\\n    token_id\\n    pk\\n    holders {\\n      holder_address\\n    }\\n  }\\n}\\n\",\"variables\":null,\"operationName\":\"MyQuery\"}`,
+      method: 'POST',
+    });
+    const tokens: {
+      name: string;
+      token_id: number;
+      pk: number;
+      holders: { holder_address: string }[];
+    }[] = (await result.json()).data.token;
+    tokens.forEach((token) => {
+      this.getDomainByName(
+        token.name.replace('.tez', ''),
+        token.token_id,
+        true,
+        token.holders[0].holder_address,
+      ).then((domain) => {
+        if (domain.name === domain.name.split('').reverse().join('')) {
+          domain.tags.push('palindromes');
+          domain.tags = Array.from(new Set(domain.tags));
+          domain.isPalindromes = true;
+        } else domain.isPalindromes = false;
+
+        if (domain.name.indexOf('-') >= 0) {
+          domain.collectionId = new Types.ObjectId(
+            TEZOS_COLLECTION_IDS['HYPEN'],
+          );
+          // console.log(domain);
+        } else if (parseInt(domain.name).toString() == domain.name) {
+        } else if (/\d/.test(domain.name)) {
+        } else if (domain.name.length === 3)
+          domain.collectionId = new Types.ObjectId(TEZOS_COLLECTION_IDS['3LD']);
+        else if (domain.name.length === 4)
+          domain.collectionId = new Types.ObjectId(TEZOS_COLLECTION_IDS['4LD']);
+        else if (domain.name.length === 5)
+          domain.collectionId = new Types.ObjectId(TEZOS_COLLECTION_IDS['5LD']);
+
+        domain.save();
+      });
+    });
+
+    if (tokens.at(-1)) {
+      setting.lastPk = tokens.at(-1).pk;
+      setting.save();
+    }
+
+    return tokens;
+  }
 }
+/*
+query MyQuery {
+  token(
+    where: {fa_contract: {_eq: "KT1GBZmSxmnKJXGMdMLbugPfLyUPmuLSMwKS"}}
+    order_by: {pk: asc}
+  ) {
+    name
+    token_id
+    timestamp
+    pk
+  }
+}
+
+*/

@@ -74,15 +74,15 @@ export class DomainController {
   @Get('/test-link')
   async testLink() {
     // 634b6b5273871fad49b322fd
-    return await this.service.testFunction();
+    return await this.service.fetchNewDomains();
   }
 
   @Get('/refresh-collection/:collectionId')
   async updateByCollection(@Param('collectionId') collectionId: string) {
     return await this.service.updateByCollection(collectionId);
   }
-  @Get('/create-collection')
-  async createCollection() {
-    return await this.service.createCollection();
-  }
+  // @Get('/create-collection')
+  // async createCollection() {
+  //   return await this.service.createCollection();
+  // }
 }

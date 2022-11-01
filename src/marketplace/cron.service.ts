@@ -18,4 +18,9 @@ export class CronService {
     this.collectionService.updateCollections();
     // this.logger.verbose(new Date());
   }
+  @Cron('30 */5 * * * *')
+  async updateDomains() {
+    this.domainService.fetchNewDomains();
+    // this.logger.verbose(new Date());
+  }
 }

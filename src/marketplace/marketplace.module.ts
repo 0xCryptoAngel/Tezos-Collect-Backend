@@ -21,6 +21,7 @@ import { CronService } from './cron.service';
 import { ProfileService } from './profile.service';
 import { ProfileController } from './profile.controller';
 import { Profile, ProfileSchema } from './schema/profile.schema';
+import { Setting, SettingSchema } from './schema/settings.schema';
 
 @Module({
   providers: [
@@ -46,6 +47,7 @@ import { Profile, ProfileSchema } from './schema/profile.schema';
         { name: Domain.name, schema: DomainSchema },
         { name: DomainActivity.name, schema: DomainActivitySchema },
         { name: Profile.name, schema: ProfileSchema },
+        { name: Setting.name, schema: SettingSchema },
       ],
       TEZOS_COLLECT_NETWORK,
     ),
