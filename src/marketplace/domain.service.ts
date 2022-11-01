@@ -95,6 +95,9 @@ export class DomainService {
       parseInt(updateDomainDto.name).toString() == updateDomainDto.name
     ) {
     } else if (/\d/.test(updateDomainDto.name)) {
+    } else if (
+      updateDomainDto.collectionId == TEZOS_COLLECTION_IDS['COUNTRIES']
+    ) {
     } else if (updateDomainDto.name.length === 3)
       updateDomainDto.collectionId = TEZOS_COLLECTION_IDS['3LD'];
     else if (updateDomainDto.name.length === 4)
