@@ -1,4 +1,6 @@
-export const TEZOS_COLLECT_NETWORK = 'mainnet';
+require('dotenv').config();
+export const TEZOS_COLLECT_NETWORK =
+  process.env.NODE_ENV === 'development' ? 'ghostnet' : 'mainnet';
 
 export const MORE_COLLECTION_ID = '633b3c74965d76ae5e3a1d83';
 export const TEZOS_COLLECT_SECRET = 'TEZOS_COLLECT_SECRET';
