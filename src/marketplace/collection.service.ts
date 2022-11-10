@@ -139,7 +139,7 @@ export class CollectionService {
 
       collection.numberOfMinted = numberOfMinted;
       collection.numberOfItems = numberOfItems;
-      collection.numberOfOwners = numberOfOwners[0].ownerCount;
+      collection.numberOfOwners = numberOfOwners[0]?.ownerCount || 0;
       // console.log(
       //   collection.slug,
       //   numberOfMinted,

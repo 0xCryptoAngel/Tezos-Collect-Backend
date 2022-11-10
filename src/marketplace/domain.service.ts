@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { MS_PER_DAY, TEZOS_COLLECTION_IDS } from 'src/helpers/constants';
+import {
+  MS_PER_DAY,
+  TEZOS_COLLECTION_IDS,
+  TEZOS_COLLECT_NETWORK,
+} from 'src/helpers/constants';
 
 import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
 import { Domain, DomainDocument } from './schema/domain.schema';
@@ -594,7 +598,9 @@ export class DomainService {
 
   async fetchNewDomains() {
     // await this.settingModel.create({});
+    if (TEZOS_COLLECT_NETWORK === 'ghostnet') return;
     const setting = await this.settingModel.findOne().exec();
+
     const result = await fetch('https://data.objkt.com/v3/graphql', {
       headers: {
         accept: 'application/json',
