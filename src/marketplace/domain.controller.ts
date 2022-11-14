@@ -74,7 +74,8 @@ export class DomainController {
   @Get('/test-link')
   async testLink() {
     // 634b6b5273871fad49b322fd
-    return await this.service.fetchNewDomains();
+    // return await this.service.fetchNewDomains();
+    return await this.service.testFunction();
   }
 
   @Get('/refresh-collection/:collectionId')

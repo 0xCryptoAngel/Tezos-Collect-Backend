@@ -68,6 +68,13 @@ export class Domain {
 
   @Prop({ default: false })
   isPalindromes: boolean;
+
+  @Prop({ default: false })
+  tdOfferStatus: boolean;
+  @Prop({ default: 0 })
+  tdOfferPrice: number;
+  @Prop({ default: new Date(0) })
+  tdOfferExpires: Date;
 }
 
 export const DomainSchema = SchemaFactory.createForClass(Domain);

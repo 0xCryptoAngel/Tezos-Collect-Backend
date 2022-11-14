@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -10,10 +10,12 @@ import {
 import { QueryDomainDto, UpdateDomainDto } from './dto/domain.dto';
 import { Domain, DomainDocument } from './schema/domain.schema';
 import { Profile, ProfileDocument } from './schema/profile.schema';
-import fetch from 'node-fetch';
 import { Setting, SettingDocument } from './schema/settings.schema';
+import executeGraphQl from 'src/helpers/executeGraphQL';
 @Injectable()
 export class DomainService {
+  private readonly logger = new Logger(DomainService.name);
+
   constructor(
     @InjectModel(Domain.name)
     private readonly domainModel: Model<DomainDocument>,
@@ -24,23 +26,7 @@ export class DomainService {
   ) {}
 
   async testFunction() {
-    // const _profile = await this.profileModel
-    //   .findOne({ address: 'ASDF' })
-    //   .exec();
-    // if (_profile) {
-    //   return _profile;
-    // }
-    // return await this.profileModel.create({ address: 'ASDF' });
-    // await this.domainModel.updateMany(
-    //   {
-    //     isForAuction: true,
-    //   },
-    //   { isForAuction: false },
-    // );
-    // const domains = await this.domainModel.find();
-    // await this.domainModel
-    //   .deleteMany({ _id: { $gt: '634b6b5273871fad49b322fd' } })
-    //   .exec();
+    await this.fetchTezosDomainsOffer();
   }
 
   async findAll(): Promise<Domain[]> {
@@ -73,6 +59,10 @@ export class DomainService {
   ): Promise<DomainDocument[]> {
     const all = await this.domainModel.find({ collectionId }).exec();
     return all;
+  }
+
+  async getDomainByTokenId(_tokenId: number): Promise<DomainDocument> {
+    return await this.domainModel.findOne({ tokenId: _tokenId }).exec();
   }
 
   async updateOneByName(
@@ -492,29 +482,15 @@ export class DomainService {
       const names = numArr.map((index) => `${domainNames[index]}.tez`);
       console.log(JSON.stringify(names));
 
-      const result = await fetch('https://api.tezos.domains/graphql', {
-        headers: {
-          accept: '*/*, application/json',
-          'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
-          'content-type': 'application/json',
-          'sec-ch-ua':
-            '"Chromium";v="106", "Google Chrome";v="106", "Not;A=Brand";v="99"',
-          'sec-ch-ua-mobile': '?0',
-          'sec-ch-ua-platform': '"Windows"',
-          'sec-fetch-dest': 'empty',
-          'sec-fetch-mode': 'cors',
-          'sec-fetch-site': 'same-origin',
-          Referer: 'https://api.tezos.domains/playground',
-          'Referrer-Policy': 'same-origin',
-        },
-        body: `{"operationName":null,"variables":{},"query":"{\\n  domains(where: {name: {in: ${JSON.stringify(
+      const result = await executeGraphQl(
+        'https://api.tezos.domains/graphql',
+        `{"operationName":null,"variables":{},"query":"{\\n  domains(where: {name: {in: ${JSON.stringify(
           names,
         ).replace(
           /"/g,
           `\\"`,
         )} }}) {\\n    totalCount\\n    items {\\n      name\\n      owner\\n      tokenId\\n      expiresAtUtc\\n      lastAuction {\\n        endsAtUtc\\n        highestBid {\\n          amount\\n        }\\n      }\\n    }\\n    pageInfo {\\n      hasNextPage\\n      endCursor\\n      startCursor\\n    }\\n  }\\n}\\n"}`,
-        method: 'POST',
-      });
+      );
       const domainObjs = (await result.json()).data.domains.items;
       // console.log(domainObjs);
       // const domainObj = (await result.json()).data.domains.items;
@@ -553,24 +529,10 @@ export class DomainService {
     console.log(domains.length);
     let cnt = 0;
     domains.forEach(async (domain) => {
-      const result = await fetch('https://api.tezos.domains/graphql', {
-        headers: {
-          accept: '*/*, application/json',
-          'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
-          'content-type': 'application/json',
-          'sec-ch-ua':
-            '"Chromium";v="106", "Google Chrome";v="106", "Not;A=Brand";v="99"',
-          'sec-ch-ua-mobile': '?0',
-          'sec-ch-ua-platform': '"Windows"',
-          'sec-fetch-dest': 'empty',
-          'sec-fetch-mode': 'cors',
-          'sec-fetch-site': 'same-origin',
-          Referer: 'https://api.tezos.domains/playground',
-          'Referrer-Policy': 'same-origin',
-        },
-        body: `{\"operationName\":null,\"variables\":{},\"query\":\"{\\n  domain(name: \\\"${domain.name}.tez\\\") {\\n    owner\\n    name\\n    reverseRecord {\\n      address\\n    }\\n    expiresAtUtc\\n    tokenId\\n    operators {\\n      address\\n    }\\n    lastAuction {\\n      highestBid {\\n        amount\\n      }\\n      endsAtUtc\\n    }\\n  }\\n}\\n\"}`,
-        method: 'POST',
-      });
+      const result = await executeGraphQl(
+        'https://api.tezos.domains/graphql',
+        `{\"operationName\":null,\"variables\":{},\"query\":\"{\\n  domain(name: \\\"${domain.name}.tez\\\") {\\n    owner\\n    name\\n    reverseRecord {\\n      address\\n    }\\n    expiresAtUtc\\n    tokenId\\n    operators {\\n      address\\n    }\\n    lastAuction {\\n      highestBid {\\n        amount\\n      }\\n      endsAtUtc\\n    }\\n  }\\n}\\n\"}`,
+      );
       const domainObj = (await result.json()).data.domain;
       if (domainObj) {
         domain.isRegistered = true;
@@ -597,89 +559,126 @@ export class DomainService {
   }
 
   async fetchNewDomains() {
-    // await this.settingModel.create({});
+    try {
+      // await this.settingModel.create({});
+      if (TEZOS_COLLECT_NETWORK === 'ghostnet') return;
+      const setting = await this.settingModel.findOne().exec();
+
+      const result = await executeGraphQl(
+        'https://data.objkt.com/v3/graphql',
+        `{\"query\":\"query MyQuery {\\n  token(\\n    where: {fa_contract: {_eq: \\\"KT1GBZmSxmnKJXGMdMLbugPfLyUPmuLSMwKS\\\"}, pk: {_gt: ${setting.lastPk}}}\\n    order_by: {pk: asc}\\n  ) {\\n    name\\n    token_id\\n    pk\\n    holders {\\n      holder_address\\n    }\\n  }\\n}\\n\",\"variables\":null,\"operationName\":\"MyQuery\"}`,
+      );
+      const tokens: {
+        name: string;
+        token_id: number;
+        pk: number;
+        holders: { holder_address: string }[];
+      }[] = (await result.json()).data.token;
+      tokens.forEach((token) => {
+        this.getDomainByName(
+          token.name.replace('.tez', ''),
+          token.token_id,
+          true,
+          token.holders[0].holder_address,
+        ).then((domain) => {
+          if (domain.name === domain.name.split('').reverse().join('')) {
+            domain.tags.push('palindromes');
+            domain.tags = Array.from(new Set(domain.tags));
+            domain.isPalindromes = true;
+          } else domain.isPalindromes = false;
+
+          if (domain.name.indexOf('-') >= 0) {
+            domain.collectionId = new Types.ObjectId(
+              TEZOS_COLLECTION_IDS['HYPEN'],
+            );
+            // console.log(domain);
+          } else if (parseInt(domain.name).toString() == domain.name) {
+          } else if (/\d/.test(domain.name)) {
+          } else if (
+            domain.collectionId ==
+            new Types.ObjectId(TEZOS_COLLECTION_IDS['COUNTRIES'])
+          ) {
+          } else if (domain.name.length === 3)
+            domain.collectionId = new Types.ObjectId(
+              TEZOS_COLLECTION_IDS['3LD'],
+            );
+          else if (domain.name.length === 4)
+            domain.collectionId = new Types.ObjectId(
+              TEZOS_COLLECTION_IDS['4LD'],
+            );
+          else if (domain.name.length === 5)
+            domain.collectionId = new Types.ObjectId(
+              TEZOS_COLLECTION_IDS['5LD'],
+            );
+
+          domain.save();
+        });
+      });
+
+      if (tokens.at(-1)) {
+        setting.lastPk = tokens.at(-1).pk;
+        setting.save();
+      }
+
+      return tokens;
+    } catch (error) {
+      this.logger.error(error);
+    }
+  }
+
+  async fetchTezosDomainsOffer() {
     if (TEZOS_COLLECT_NETWORK === 'ghostnet') return;
     const setting = await this.settingModel.findOne().exec();
-
-    const result = await fetch('https://data.objkt.com/v3/graphql', {
-      headers: {
-        accept: 'application/json',
-        'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
-        'content-type': 'application/json',
-        'sec-ch-ua':
-          '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        cookie: 'ai_user=QPsH+kLj3D18rTkDqD8Ut8|2022-09-22T05:55:26.464Z',
-        Referer: 'https://data.objkt.com/explore/',
-        'Referrer-Policy': 'strict-origin-when-cross-origin',
-      },
-      body: `{\"query\":\"query MyQuery {\\n  token(\\n    where: {fa_contract: {_eq: \\\"KT1GBZmSxmnKJXGMdMLbugPfLyUPmuLSMwKS\\\"}, pk: {_gt: ${setting.lastPk}}}\\n    order_by: {pk: asc}\\n  ) {\\n    name\\n    token_id\\n    pk\\n    holders {\\n      holder_address\\n    }\\n  }\\n}\\n\",\"variables\":null,\"operationName\":\"MyQuery\"}`,
-      method: 'POST',
+    const result = await executeGraphQl(
+      'https://api.tezos.domains/graphql',
+      `{"operationName":null,"variables":{},"query":"{\\n  offers(where: {tokenId: {greaterThan: ${setting.lastOffferTokenId}}, state: {in: [ACTIVE]}}, order: {direction: ASC, field: TOKEN_ID}) {\\n    items {\\n      tokenId\\n      domain {\\n        name\\n        expiresAtUtc\\n      }\\n      price\\n      expiresAtUtc\\n    }\\n  }\\n}\\n"}`,
+    );
+    const offerList: {
+      tokenId: number;
+      domain: {
+        name: string;
+        expiresAtUtc: Date;
+      };
+      price: number;
+      expiresAtUtc: Date;
+    }[] = (await result.json()).data.offers.items;
+    offerList.forEach((item) => {
+      item.price = item.price / 10 ** 6;
+      item.domain.expiresAtUtc = new Date(item.domain.expiresAtUtc);
+      item.expiresAtUtc = new Date(item.expiresAtUtc);
     });
-    const tokens: {
-      name: string;
-      token_id: number;
-      pk: number;
-      holders: { holder_address: string }[];
-    }[] = (await result.json()).data.token;
-    tokens.forEach((token) => {
-      this.getDomainByName(
-        token.name.replace('.tez', ''),
-        token.token_id,
-        true,
-        token.holders[0].holder_address,
-      ).then((domain) => {
-        if (domain.name === domain.name.split('').reverse().join('')) {
-          domain.tags.push('palindromes');
-          domain.tags = Array.from(new Set(domain.tags));
-          domain.isPalindromes = true;
-        } else domain.isPalindromes = false;
 
-        if (domain.name.indexOf('-') >= 0) {
-          domain.collectionId = new Types.ObjectId(
-            TEZOS_COLLECTION_IDS['HYPEN'],
-          );
-          // console.log(domain);
-        } else if (parseInt(domain.name).toString() == domain.name) {
-        } else if (/\d/.test(domain.name)) {
-        } else if (
-          domain.collectionId ==
-          new Types.ObjectId(TEZOS_COLLECTION_IDS['COUNTRIES'])
-        ) {
-        } else if (domain.name.length === 3)
-          domain.collectionId = new Types.ObjectId(TEZOS_COLLECTION_IDS['3LD']);
-        else if (domain.name.length === 4)
-          domain.collectionId = new Types.ObjectId(TEZOS_COLLECTION_IDS['4LD']);
-        else if (domain.name.length === 5)
-          domain.collectionId = new Types.ObjectId(TEZOS_COLLECTION_IDS['5LD']);
-
+    if (offerList.length) {
+      await this.domainModel.updateMany(
+        {
+          tokenId: {
+            $gt: setting.lastOffferTokenId,
+            $lt: offerList.at(-1)?.tokenId,
+          },
+        },
+        { tdOfferStatus: false },
+      );
+      setting.lastOffferTokenId = offerList.at(-1).tokenId;
+    } else {
+      await this.domainModel.updateMany(
+        {
+          tokenId: {
+            $gt: setting.lastOffferTokenId,
+          },
+        },
+        { tdOfferStatus: false },
+      );
+      setting.lastOffferTokenId = 0;
+    }
+    offerList.map((offer) => {
+      this.getDomainByTokenId(offer.tokenId).then((domain) => {
+        domain.tdOfferExpires = offer.expiresAtUtc;
+        domain.tdOfferPrice = offer.price;
+        domain.tdOfferStatus = true;
         domain.save();
       });
     });
-
-    if (tokens.at(-1)) {
-      setting.lastPk = tokens.at(-1).pk;
-      setting.save();
-    }
-
-    return tokens;
+    setting.save();
+    return offerList;
   }
 }
-/*
-query MyQuery {
-  token(
-    where: {fa_contract: {_eq: "KT1GBZmSxmnKJXGMdMLbugPfLyUPmuLSMwKS"}}
-    order_by: {pk: asc}
-  ) {
-    name
-    token_id
-    timestamp
-    pk
-  }
-}
-
-*/

@@ -18,9 +18,16 @@ export class CronService {
     this.collectionService.updateCollections();
     // this.logger.verbose(new Date());
   }
+  @Cron('*/20 * * * * *')
+  async fetchTezosDomainsMarketData() {
+    try {
+      await this.domainService.fetchTezosDomainsOffer();
+    } catch (error) {
+      this.logger.error(error);
+    }
+  }
   @Cron('30 */5 * * * *')
   async updateDomains() {
     this.domainService.fetchNewDomains();
-    // this.logger.verbose(new Date());
   }
 }

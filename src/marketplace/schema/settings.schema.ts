@@ -7,6 +7,9 @@ export type SettingDocument = Setting & Document;
 @Schema()
 export class Setting {
   @Prop({ default: 0 })
+  lastOffferTokenId: number;
+
+  @Prop({ default: 0 })
   lastPk: number;
 
   @Prop({ default: 0 })
