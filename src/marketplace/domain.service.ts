@@ -312,6 +312,7 @@ export class DomainService {
         name: new RegExp('^' + queryDomainDto.searchOptions.endWith),
       });
     }
+
     const lengthExpr: any = {};
 
     // searchOptions.minLength
@@ -344,7 +345,10 @@ export class DomainService {
       priceFilter.$lte = queryDomainDto.searchOptions.maxPrice;
     }
     if (priceFilter.$gte || priceFilter.$lte)
-      domainQueryObj = domainQueryObj.find({ price: priceFilter });
+      addQuery(domainQueryObj, {
+        $or: [{ price: priceFilter }, { tdOfferPrice: priceFilter }],
+      });
+    // domainQueryObj = domainQueryObj.find({ price: priceFilter });
 
     // advancedFilterValues
     queryDomainDto.advancedFilterValues.forEach((filter) => {
@@ -399,10 +403,10 @@ export class DomainService {
     // sortOption
     switch (queryDomainDto.sortOption) {
       case 'PRICE_ASC':
-        domainQueryObj = domainQueryObj.sort({ price: 1 });
+        domainQueryObj = domainQueryObj.sort({ price: 1, tdOfferPrice: 1 });
         break;
       case 'PRICE_DESC':
-        domainQueryObj = domainQueryObj.sort({ price: -1 });
+        domainQueryObj = domainQueryObj.sort({ price: -1, tdOfferPrice: -1 });
         break;
       case 'NAME_ASC':
         domainQueryObj = domainQueryObj.sort({ name: 1 });

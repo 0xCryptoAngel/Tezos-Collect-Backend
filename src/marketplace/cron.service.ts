@@ -15,13 +15,13 @@ export class CronService {
   // refetch new pairs every 5 minutes
   @Cron('* */5 * * * *')
   async updateCollections() {
-    this.collectionService.updateCollections();
+    // this.collectionService.updateCollections();
     // this.logger.verbose(new Date());
   }
   @Cron('*/20 * * * * *')
   async fetchTezosDomainsMarketData() {
     try {
-      await this.domainService.fetchTezosDomainsOffer();
+      // await this.domainService.fetchTezosDomainsOffer();
     } catch (error) {
       this.logger.error(error);
     }
