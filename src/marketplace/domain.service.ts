@@ -184,7 +184,7 @@ export class DomainService {
 
   async queryDomain(
     queryDomainDto: QueryDomainDto,
-  ): Promise<{ domains: DomainDocument[]; count: number }> {
+  ): Promise<{ domains: Domain[]; count: number }> {
     let domainQueryObj = this.domainModel.find({});
 
     const addQuery = (queryDomainDto: any, _query: any) => {
@@ -212,7 +212,11 @@ export class DomainService {
     else {
       if (queryDomainDto.searchOptions.domainListed === true)
         domainQueryObj = domainQueryObj.find({
-          $or: [{ isForAuction: true }, { isForSale: true }],
+          $or: [
+            { isForAuction: true },
+            { isForSale: true },
+            { tdOfferStatus: true },
+          ],
         });
       else if (queryDomainDto.searchOptions.domainListed === false) {
         domainQueryObj = domainQueryObj.find({
@@ -457,7 +461,7 @@ export class DomainService {
 
     console.log(domainQueryObj.getQuery());
 
-    return { count, domains: await domainQueryObj.exec() };
+    return { count, domains: await domainQueryObj.lean().exec() };
   }
 
   // generate 10k collection
@@ -631,7 +635,7 @@ export class DomainService {
     const setting = await this.settingModel.findOne().exec();
     const result = await executeGraphQl(
       'https://api.tezos.domains/graphql',
-      `{"operationName":null,"variables":{},"query":"{\\n  offers(where: {tokenId: {greaterThan: ${setting.lastOffferTokenId}}, state: {in: [ACTIVE]}}, order: {direction: ASC, field: TOKEN_ID}) {\\n    items {\\n      tokenId\\n      domain {\\n        name\\n        expiresAtUtc\\n      }\\n      price\\n      expiresAtUtc\\n    }\\n  }\\n}\\n"}`,
+      `{"operationName":null,"variables":{},"query":"{\\n  offers(where: {tokenId: {greaterThan: ${setting.lastOfferTokenId}}, state: {in: [ACTIVE]}}, order: {direction: ASC, field: TOKEN_ID}) {\\n    items {\\n      tokenId\\n      domain {\\n        name\\n        expiresAtUtc\\n      }\\n      price\\n      expiresAtUtc\\n    }\\n  }\\n}\\n"}`,
     );
     const offerList: {
       tokenId: number;
@@ -652,23 +656,23 @@ export class DomainService {
       await this.domainModel.updateMany(
         {
           tokenId: {
-            $gt: setting.lastOffferTokenId,
+            $gt: setting.lastOfferTokenId,
             $lt: offerList.at(-1)?.tokenId,
           },
         },
         { tdOfferStatus: false },
       );
-      setting.lastOffferTokenId = offerList.at(-1).tokenId;
+      setting.lastOfferTokenId = offerList.at(-1).tokenId;
     } else {
       await this.domainModel.updateMany(
         {
           tokenId: {
-            $gt: setting.lastOffferTokenId,
+            $gt: setting.lastOfferTokenId,
           },
         },
         { tdOfferStatus: false },
       );
-      setting.lastOffferTokenId = 0;
+      setting.lastOfferTokenId = 0;
     }
     offerList.map((offer) => {
       this.getDomainByTokenId(offer.tokenId).then((domain) => {

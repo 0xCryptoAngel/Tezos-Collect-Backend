@@ -23,7 +23,7 @@ export class CollectionService {
     private readonly domainActivityModel: Model<DomainActivityDocument>,
   ) {}
 
-  async findAll(): Promise<CollectionDocument[]> {
+  async findAll(): Promise<Collection[]> {
     const all = await this.collectionModel
       .find()
       .select({
@@ -72,7 +72,7 @@ export class CollectionService {
   }
 
   async updateCollections() {
-    const collections = await this.findAll();
+    const collections = await this.collectionModel.find({});
     collections.forEach(async (collection) => {
       const [
         numberOfMinted,
