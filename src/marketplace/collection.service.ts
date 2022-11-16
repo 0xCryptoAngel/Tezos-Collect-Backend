@@ -81,7 +81,6 @@ export class CollectionService {
         volumeDay,
         volumeMonth,
         floorPrice,
-        tdOfferFloorPrice,
       ] = await Promise.all([
         this.domainModel
           .find({ collectionId: collection._id, isRegistered: true })
@@ -132,16 +131,8 @@ export class CollectionService {
           { $group: { _id: null, amount: { $sum: '$amount' } } },
         ]),
         this.domainModel
-          .findOne({ collectionId: collection._id, price: { $gt: 0 } })
-          .sort({ price: 1 })
-          .exec(),
-        this.domainModel
-          .findOne({
-            collectionId: collection._id,
-            tdOfferPrice: { $gt: 0 },
-            tdOfferStatus: true,
-          })
-          .sort({ tdOfferPrice: 1 })
+          .findOne({ collectionId: collection._id, fairPrice: { $gt: 0 } })
+          .sort({ fairPrice: 1 })
           .exec(),
       ]);
 
@@ -164,10 +155,7 @@ export class CollectionService {
       if (floorPrice) {
         const oldFloorPrice =
           collection.floorPrice / (1 + collection.floorPriceChange);
-        collection.floorPrice = Math.min(
-          floorPrice.price,
-          tdOfferFloorPrice.tdOfferPrice,
-        );
+        collection.floorPrice = floorPrice.fairPrice;
         collection.floorPriceChange = collection.floorPrice / oldFloorPrice - 1;
       }
 

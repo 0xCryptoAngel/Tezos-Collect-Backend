@@ -12,6 +12,7 @@ import { Domain, DomainDocument } from './schema/domain.schema';
 import { Profile, ProfileDocument } from './schema/profile.schema';
 import { Setting, SettingDocument } from './schema/settings.schema';
 import executeGraphQl from 'src/helpers/executeGraphQL';
+import { getFairPrice } from 'src/helpers/number.utils';
 @Injectable()
 export class DomainService {
   private readonly logger = new Logger(DomainService.name);
@@ -403,10 +404,10 @@ export class DomainService {
     // sortOption
     switch (queryDomainDto.sortOption) {
       case 'PRICE_ASC':
-        domainQueryObj = domainQueryObj.sort({ price: 1, tdOfferPrice: 1 });
+        domainQueryObj = domainQueryObj.sort({ fairPrice: 1 });
         break;
       case 'PRICE_DESC':
-        domainQueryObj = domainQueryObj.sort({ price: -1, tdOfferPrice: -1 });
+        domainQueryObj = domainQueryObj.sort({ fairPrice: -1 });
         break;
       case 'NAME_ASC':
         domainQueryObj = domainQueryObj.sort({ name: 1 });
@@ -683,6 +684,7 @@ export class DomainService {
         domain.tdOfferExpires = offer.expiresAtUtc;
         domain.tdOfferPrice = offer.price;
         domain.tdOfferStatus = true;
+        domain.fairPrice = getFairPrice(domain.price, offer.price);
         domain.save();
       });
     });

@@ -75,6 +75,9 @@ export class Domain {
   tdOfferPrice: number;
   @Prop({ default: new Date(0) })
   tdOfferExpires: Date;
+
+  @Prop({ default: 0 })
+  fairPrice: number;
 }
 
 export const DomainSchema = SchemaFactory.createForClass(Domain);
